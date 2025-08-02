@@ -15,6 +15,14 @@ if not ringUpdateEvent then
     ringUpdateEvent.Parent = ReplicatedStorage
 end
 
+-- RemoteEvent para Game1Over
+local game1OverEvent = ReplicatedStorage:FindFirstChild("Game1Over")
+if not game1OverEvent then
+    game1OverEvent = Instance.new("RemoteEvent")
+    game1OverEvent.Name = "Game1Over"
+    game1OverEvent.Parent = ReplicatedStorage
+end
+
 -- Tabela para rastrear o progresso de cada jogador
 local playerRingProgress = {}
 
@@ -63,11 +71,20 @@ local function setupRingTouchDetection(ring, player, currentRingNumber)
                     -- Deletar o ring atual
                     ring:Destroy()
                     
+                    -- Verificar se é o Ring 23 (último ring)
+                    if currentRingNumber == 23 then
+                        print("Jogador " .. player.Name .. " completou todos os rings! Acionando Game1Over...")
+                        game1OverEvent:FireServer(player)
+                        -- Limpar dados do jogador
+                        playerRingProgress[player.UserId] = nil
+                        return
+                    end
+                    
                     -- Atualizar progresso do jogador
                     local nextRingNumber = currentRingNumber + 1
                     playerRingProgress[player.UserId] = nextRingNumber
                     
-                    -- Enviar atualização para o cliente
+                    -- Enviar atualização para o cliente (próximo número)
                     ringUpdateEvent:FireClient(player, nextRingNumber)
                     
                     -- Tentar clonar o próximo ring
@@ -94,20 +111,24 @@ function cloneNextRing(player, ringNumber)
         return
     end
     
-    local nextRing = ringsFolder:FindFirstChild("Ring " .. ringNumber)
-    if nextRing then
-        -- Clonar o próximo ring
-        local clonedRing = nextRing:Clone()
-        clonedRing.Name = "Ring" .. ringNumber .. "_" .. player.Name
-        clonedRing.Parent = Workspace
-        
-        -- Configurar detecção de toque no novo ring
-        setupRingTouchDetection(clonedRing, player, ringNumber)
-        
-        print("Ring " .. ringNumber .. " clonado para " .. player.Name)
+    -- Verificar se ainda há rings para clonar (até Ring 23)
+    if ringNumber <= 23 then
+        local nextRing = ringsFolder:FindFirstChild("Ring " .. ringNumber)
+        if nextRing then
+            -- Clonar o próximo ring
+            local clonedRing = nextRing:Clone()
+            clonedRing.Name = "Ring" .. ringNumber .. "_" .. player.Name
+            clonedRing.Parent = Workspace
+            
+            -- Configurar detecção de toque no novo ring
+            setupRingTouchDetection(clonedRing, player, ringNumber)
+            
+            print("Ring " .. ringNumber .. " clonado para " .. player.Name)
+        else
+            warn("Ring " .. ringNumber .. " não encontrado na pasta Rings!")
+        end
     else
-        print("Parabéns " .. player.Name .. "! Você completou todos os rings!")
-        -- Aqui você pode adicionar lógica para quando o jogador completa todos os rings
+        print("Limite de rings atingido para " .. player.Name)
     end
 end
 

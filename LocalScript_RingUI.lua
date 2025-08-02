@@ -36,6 +36,11 @@ end
 local function updateRingAttribute(ringNumber)
     local viewport = findViewport()
     if viewport then
+        -- Verificar se o atributo existe, se não, criar
+        if not viewport:GetAttribute("ring") then
+            print("Atributo 'ring' não existe, criando...")
+        end
+        
         viewport:SetAttribute("ring", tostring(ringNumber))
         print("Atributo 'ring' atualizado para: " .. ringNumber)
     end

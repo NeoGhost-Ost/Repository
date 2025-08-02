@@ -5,8 +5,9 @@ Este sistema gerencia a progressão do jogador através de uma sequência de an�
 ## 📁 Arquivos
 
 1. **ServerScript_RingManager.lua** - Script principal do servidor
-2. **LocalScript_RingUI.lua** - Script de UI completo com logs
-3. **LocalScript_RingUI_UpdateOnly.lua** - Versão simplificada (apenas atualiza atributo)
+2. **ServerScript_Game1OverHandler.lua** - Gerencia o fim do jogo (Ring 23)
+3. **LocalScript_RingUI.lua** - Script de UI completo com logs
+4. **LocalScript_RingUI_UpdateOnly.lua** - Versão simplificada (apenas atualiza atributo)
 
 ## 🎯 Funcionalidades
 
@@ -25,13 +26,26 @@ Este sistema gerencia a progressão do jogador através de uma sequência de an�
 - Som é reproduzido para todos os jogadores
 
 ### ✅ Atualização de UI
-- Cria/atualiza atributo string "ring" no Viewport
-- Mostra o número do ring atual (0, 1, 2, etc.)
+- Cria/atualiza atributo string "ring" no Viewport (cria automaticamente se não existir)
+- Mostra o número do próximo ring (1, 2, 3... até 24 quando completa)
 - Localização: `Glider > Frame > Viewport`
+
+### ✅ Sistema Game1Over
+- Aciona evento "Game1Over" quando jogador completa Ring 23
+- Limpa automaticamente objetos do jogador (Blowers e Rings)
+- Sistema de prevenção de duplicatas
+- Preparado para recompensas e lógicas customizadas
 
 ## 🛠️ Instalação
 
-### 1. ServerScript (ServerScript_RingManager.lua)
+### 1. ServerScripts
+**ServerScript_RingManager.lua:**
+```
+Localização: ServerScriptService
+Tipo: ServerScript
+```
+
+**ServerScript_Game1OverHandler.lua:**
 ```
 Localização: ServerScriptService
 Tipo: ServerScript
@@ -69,9 +83,9 @@ ReplicatedStorage
 └── Game1
     └── Rings
         ├── Ring 0 (modelo inicial)
-        ├── Ring 1 (próximo ring)
-        ├── Ring 2 (ring seguinte)
-        └── ... (quantos rings você quiser)
+        ├── Ring 1, Ring 2, Ring 3...
+        ├── Ring 20, Ring 21, Ring 22
+        └── Ring 23 (último ring - aciona Game1Over)
 ```
 
 ### PlayerGui
@@ -95,15 +109,22 @@ SoundService
 3. **Ações Simultâneas**:
    - ✅ Som "RingSound" é reproduzido
    - ✅ Ring atual é deletado
-   - ✅ Próximo ring é clonado
-   - ✅ Atributo UI é atualizado
-4. **Repetição**: Processo continua até não haver mais rings
+   - ✅ Atributo UI é atualizado com próximo número
+   - ✅ Próximo ring é clonado (se não for Ring 23)
+4. **Ring 23**: Quando tocado, aciona Game1Over e limpa objetos
+5. **Repetição**: Processo continua de Ring 0 até Ring 23
 
 ## 🔧 Personalização
 
-### Adicionar Mais Rings
-Simplesmente adicione mais rings na pasta Rings:
-- Ring 3, Ring 4, Ring 5, etc.
+### Modificar Quantidade de Rings
+Para alterar o limite de 23 rings, modifique estas linhas no ServerScript_RingManager.lua:
+```lua
+-- Linha da verificação do Ring final
+if currentRingNumber == 23 then
+
+-- Linha do limite de clonagem
+if ringNumber <= 23 then
+```
 
 ### Modificar Localização da UI
 Altere estas linhas no LocalScript:
@@ -133,8 +154,9 @@ explosion.Position = ring.PrimaryPart.Position
 ### Problemas Comuns
 
 1. **Ring não detecta toque**
-   - Verifique se o modelo tem partes sólidas
-   - Certifique-se de que CanCollide = true nas partes
+   - ✅ Sistema funciona com CanCollide = false
+   - Verifique se o modelo tem partes (BasePart)
+   - Certifique-se de que o jogador tem Humanoid no Character
 
 2. **Som não toca**
    - Verifique se existe "RingSound" no SoundService
@@ -145,8 +167,12 @@ explosion.Position = ring.PrimaryPart.Position
    - Confirme se o LocalScript está no local correto
 
 4. **Próximo ring não aparece**
-   - Verifique se existe Ring 1, Ring 2, etc. na pasta Rings
-   - Confirme se os nomes estão corretos ("Ring 1", "Ring 2")
+   - Verifique se existem Ring 1 até Ring 23 na pasta Rings
+   - Confirme se os nomes estão corretos ("Ring 1", "Ring 2", etc.)
+
+6. **Game1Over não aciona**
+   - Certifique-se de que existe Ring 23 na pasta Rings
+   - Verifique se ServerScript_Game1OverHandler.lua está instalado
 
 5. **Sistema não inicializa**
    - Certifique-se de que o Ring0_PlayerName foi criado pelo sistema anterior
